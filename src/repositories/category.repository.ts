@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { type Prisma } from '@prisma/client'
 
 export class CategoryRepository {
   async findAll() {
@@ -22,11 +22,11 @@ export class CategoryRepository {
     });
   }
 
-  async create(data: Prisma.CategoryCreateInput) {
+  async create(data: Prisma.CategoryUncheckedCreateInput) {
     return prisma.category.create({ data });
   }
 
-  async update(id: string, data: Prisma.CategoryUpdateInput) {
+  async update(id: string, data: Prisma.CategoryUncheckedUpdateInput) {
     return prisma.category.update({
       where: { id },
       data,

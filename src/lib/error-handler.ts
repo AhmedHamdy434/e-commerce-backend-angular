@@ -1,6 +1,5 @@
 import { ZodError } from 'zod'
 import { errorResponse } from './api-response'
-import { Prisma } from '@prisma/client'
 
 export class ApiError extends Error {
   constructor(public statusCode: number, message: string) {
@@ -21,11 +20,14 @@ export function handleError(error: unknown) {
     return errorResponse(message, 400, error.flatten().fieldErrors)
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === 'P2002') {
+  // Check for Prisma errors using properties to avoid issues with Prisma namespace export in some environments
+  if (error && typeof error === 'object' && 'code' in error && typeof (error as any).code === 'string') {
+    const prismaError = error as { code: string }
+    
+    if (prismaError.code === 'P2002') {
       return errorResponse('Unique constraint violation', 409)
     }
-    if (error.code === 'P2025') {
+    if (prismaError.code === 'P2025') {
       return errorResponse('Record not found', 404)
     }
   }

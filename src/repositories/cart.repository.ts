@@ -1,41 +1,65 @@
-import { prisma } from '@/lib/prisma'
+import { sql } from '@/lib/db'
 
 export class CartRepository {
   async findByUserId(userId: string) {
-    return prisma.cart.findMany({
-      where: { userId },
-      include: { product: true },
-    })
+    return sql`
+      SELECT c.*, 
+             json_build_object(
+               'id', p.id, 
+               'name', p.name, 
+               'price', p.price, 
+               'images', p.images,
+               'slug', p.slug
+             ) as product
+      FROM "Cart" c
+      LEFT JOIN "Product" p ON c."productId" = p.id
+      WHERE c."userId" = ${userId}
+    `;
   }
 
   async findItem(userId: string, productId: string) {
-    return prisma.cart.findUnique({
-      where: { userId_productId: { userId, productId } },
-    })
+    const results = await sql`
+      SELECT * FROM "Cart" 
+      WHERE "userId" = ${userId} AND "productId" = ${productId}
+    `;
+    return results[0];
   }
 
   async addItem(userId: string, productId: string, quantity: number) {
-    return prisma.cart.upsert({
-      where: { userId_productId: { userId, productId } },
-      update: { quantity: { increment: quantity } },
-      create: { userId, productId, quantity },
-    })
+    const id = 'cart_' + Math.random().toString(36).substr(2, 9);
+    const results = await sql`
+      INSERT INTO "Cart" (id, "userId", "productId", quantity)
+      VALUES (${id}, ${userId}, ${productId}, ${quantity})
+      ON CONFLICT ("userId", "productId") 
+      DO UPDATE SET quantity = "Cart".quantity + EXCLUDED.quantity
+      RETURNING *
+    `;
+    return results[0];
   }
 
   async updateQuantity(id: string, quantity: number) {
-    return prisma.cart.update({
-      where: { id },
-      data: { quantity },
-    })
+    const results = await sql`
+      UPDATE "Cart" SET quantity = ${quantity}
+      WHERE id = ${id}
+      RETURNING *
+    `;
+    return results[0];
   }
 
   async removeItem(id: string) {
-    return prisma.cart.delete({ where: { id } })
+    const results = await sql`
+      DELETE FROM "Cart" WHERE id = ${id} RETURNING *
+    `;
+    return results[0];
   }
 
   async clear(userId: string) {
-    return prisma.cart.deleteMany({ where: { userId } })
+    const results = await sql`
+      DELETE FROM "Cart" WHERE "userId" = ${userId} RETURNING *
+    `;
+    return results;
   }
 }
+
 
 export const cartRepository = new CartRepository()

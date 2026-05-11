@@ -1,27 +1,27 @@
-import { prisma } from '@/lib/prisma'
+import { sql } from '@/lib/db'
 import { RegisterInput } from '@/validators/auth.validator'
 
 export class UserRepository {
   async findByEmail(email: string) {
-    return prisma.user.findUnique({ where: { email } })
+    const results = await sql`SELECT * FROM "User" WHERE email = ${email}`;
+    return results[0];
   }
 
   async findById(id: string) {
-    return prisma.user.findUnique({ where: { id } })
+    const results = await sql`SELECT * FROM "User" WHERE id = ${id}`;
+    return results[0];
   }
 
   async create(data: RegisterInput) {
-    return prisma.user.create({
-      data,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-      },
-    })
+    const id = 'user_' + Math.random().toString(36).substr(2, 9);
+    const results = await sql`
+      INSERT INTO "User" (id, name, email, password, "updatedAt")
+      VALUES (${id}, ${data.name}, ${data.email}, ${data.password}, NOW())
+      RETURNING id, name, email, role, "createdAt"
+    `;
+    return results[0];
   }
 }
+
 
 export const userRepository = new UserRepository()

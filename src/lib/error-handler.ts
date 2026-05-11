@@ -20,15 +20,15 @@ export function handleError(error: unknown) {
     return errorResponse(message, 400, error.flatten().fieldErrors)
   }
 
-  // Check for Prisma errors using properties to avoid issues with Prisma namespace export in some environments
-  if (error && typeof error === 'object' && 'code' in error && typeof (error as any).code === 'string') {
-    const prismaError = error as { code: string }
+  // Handle PostgreSQL error codes (Neon/pg)
+  if (error && typeof error === 'object' && 'code' in error) {
+    const pgError = error as { code: string }
     
-    if (prismaError.code === 'P2002') {
-      return errorResponse('Unique constraint violation', 409)
+    if (pgError.code === '23505') { // Unique violation
+      return errorResponse('Record already exists (unique constraint violation)', 409)
     }
-    if (prismaError.code === 'P2025') {
-      return errorResponse('Record not found', 404)
+    if (pgError.code === '23503') { // Foreign key violation
+      return errorResponse('Reference error (foreign key violation)', 400)
     }
   }
 

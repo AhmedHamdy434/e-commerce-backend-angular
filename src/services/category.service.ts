@@ -4,7 +4,9 @@ import { ApiError } from '@/lib/error-handler'
 
 export class CategoryService {
   async getCategories() {
-    return categoryRepository.findAll()
+    const categories = await categoryRepository.findAll()
+    console.log('🚀 ~ getCategories ~ categories:', categories )
+    return categories
   }
 
   async getCategory(id: string) {

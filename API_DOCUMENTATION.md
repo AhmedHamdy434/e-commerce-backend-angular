@@ -17,7 +17,7 @@ This document provides a comprehensive list of all API endpoints available in th
   {
     "name": "John Doe",
     "email": "john@example.com",
-    "password": "password123"
+    "password": "Password123!"
   }
   ```
 - **Success Response (201)**:
@@ -26,11 +26,41 @@ This document provides a comprehensive list of all API endpoints available in th
     "status": true,
     "message": "User registered successfully",
     "data": {
-      "id": "user_abc123",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "role": "USER",
-      "createdAt": "2024-05-11T12:00:00.000Z"
+      "user": {
+        "id": "user_abc123",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "role": "USER",
+        "createdAt": "2024-05-11T12:00:00.000Z"
+      },
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+  }
+  ```
+
+### **Login User**
+- **URL**: `/auth/login`
+- **Method**: `POST`
+- **Body**:
+  ```json
+  {
+    "email": "john@example.com",
+    "password": "Password123!"
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "status": true,
+    "message": "Logged in successfully",
+    "data": {
+      "user": {
+        "id": "user_abc123",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "role": "USER"
+      },
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     }
   }
   ```

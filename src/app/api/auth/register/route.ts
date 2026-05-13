@@ -4,6 +4,7 @@ import { userRepository } from '@/repositories/user.repository'
 import { successResponse } from '@/lib/api-response'
 import { handleError, ApiError } from '@/lib/error-handler'
 import bcrypt from 'bcryptjs'
+import { signToken } from '@/lib/jwt'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +23,13 @@ export async function POST(request: NextRequest) {
       password: hashedPassword,
     })
 
-    return successResponse(user, 'User registered successfully', 201)
+    const token = await signToken({
+      id: user.id,
+      email: user.email,
+      role: (user as any).role,
+    })
+
+    return successResponse({ user, token }, 'User registered successfully', 201)
   } catch (error) {
     return handleError(error)
   }

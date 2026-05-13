@@ -65,6 +65,18 @@ This document provides a comprehensive list of all API endpoints available in th
   }
   ```
 
+### **Logout User**
+- **URL**: `/auth/logout`
+- **Method**: `POST`
+- **Success Response (200)**:
+  ```json
+  {
+    "status": true,
+    "message": "Logged out successfully",
+    "data": null
+  }
+  ```
+
 ---
 
 ## 2. Categories

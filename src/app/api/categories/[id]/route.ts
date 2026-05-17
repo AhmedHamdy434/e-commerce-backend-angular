@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { categoryService } from '@/services/category.service'
+import { parseRequestData } from '@/lib/request-parser'
 import { updateCategorySchema } from '@/validators/category.validator'
 import { successResponse } from '@/lib/api-response'
 import { handleError } from '@/lib/error-handler'
@@ -25,8 +26,9 @@ export async function PUT(
   try {
     await requireAdmin()
     const { id } = await params
-    const body = await request.json()
-    const validatedData = updateCategorySchema.parse(body)
+
+    const parsedData = await parseRequestData(request, { folder: 'categories' })
+    const validatedData = updateCategorySchema.parse(parsedData)
 
     const category = await categoryService.updateCategory(id, validatedData)
     return successResponse(category, 'Category updated successfully')

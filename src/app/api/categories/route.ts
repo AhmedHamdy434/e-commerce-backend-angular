@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { categoryService } from '@/services/category.service'
+import { parseRequestData } from '@/lib/request-parser'
 import { createCategorySchema } from '@/validators/category.validator'
 import { successResponse } from '@/lib/api-response'
 import { handleError } from '@/lib/error-handler'
@@ -18,8 +19,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin()
-    const body = await request.json()
-    const validatedData = createCategorySchema.parse(body)
+    
+    const parsedData = await parseRequestData(request, { folder: 'categories' })
+    const validatedData = createCategorySchema.parse(parsedData)
 
     const category = await categoryService.createCategory(validatedData)
     return successResponse(category, 'Category created successfully', 201)

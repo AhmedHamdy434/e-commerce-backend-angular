@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { productService } from '@/services/product.service'
+import { parseRequestData } from '@/lib/request-parser'
 import { updateProductSchema } from '@/validators/product.validator'
 import { successResponse } from '@/lib/api-response'
 import { handleError } from '@/lib/error-handler'
@@ -25,8 +26,12 @@ export async function PUT(
   try {
     await requireAdmin()
     const { id } = await params
-    const body = await request.json()
-    const validatedData = updateProductSchema.parse(body)
+
+    const parsedData = await parseRequestData(request, {
+      folder: 'products',
+      numericKeys: ['price', 'discount', 'stockQuantity']
+    })
+    const validatedData = updateProductSchema.parse(parsedData)
 
     const product = await productService.updateProduct(id, validatedData)
     return successResponse(product, 'Product updated successfully')

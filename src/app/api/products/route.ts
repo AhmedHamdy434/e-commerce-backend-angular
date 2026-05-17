@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { productService } from '@/services/product.service'
+import { parseRequestData } from '@/lib/request-parser'
 import { productQuerySchema, createProductSchema } from '@/validators/product.validator'
 import { successResponse, paginatedResponse } from '@/lib/api-response'
 import { handleError } from '@/lib/error-handler'
@@ -28,8 +29,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin()
-    const body = await request.json()
-    const validatedData = createProductSchema.parse(body)
+    const parsedData = await parseRequestData(request, {
+      folder: 'products',
+      numericKeys: ['price', 'discount', 'stockQuantity']
+    })
+    const validatedData = createProductSchema.parse(parsedData)
 
     const product = await productService.createProduct(validatedData)
     return successResponse(product, 'Product created successfully', 201)

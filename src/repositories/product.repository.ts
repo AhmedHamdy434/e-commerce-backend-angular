@@ -2,47 +2,47 @@ import { sql } from '@/lib/db'
 import { ProductFilters } from '@/types/api'
 
 export class ProductRepository {
-  async findAll(filters: ProductFilters, skip: number, take: number) {
-    // Get items
-    const items = await sql`
-      SELECT p.*, 
-             json_build_object(
-               'id', c.id, 
-               'name', c.name, 
-               'slug', c.slug, 
-               'image', c.image
-             ) as category
-      FROM "Product" p
-      LEFT JOIN "Category" c ON p."categoryId" = c.id
-      WHERE (c.slug = ${filters.category || null} OR ${filters.category || null} IS NULL)
-        AND (p.brand = ${filters.brand || null} OR ${filters.brand || null} IS NULL)
-        AND (p."isFeatured" = ${filters.isFeatured ?? null} OR ${filters.isFeatured ?? null} IS NULL)
-        AND (p.price >= ${filters.minPrice ?? 0})
-        AND (p.price <= ${filters.maxPrice ?? 99999999})
-      ORDER BY 
-        CASE WHEN ${filters.sort} = 'price_asc' THEN p.price END ASC,
-        CASE WHEN ${filters.sort} = 'price_desc' THEN p.price END DESC,
-        CASE WHEN ${filters.sort} = 'rating' THEN p.ratings END DESC,
-        p."createdAt" DESC
-      LIMIT ${take} OFFSET ${skip}
-    `;
+ async findAll(filters: ProductFilters, skip: number, take: number) {
+  // 1. جلب العناصر مع تحديد الأنواع صراحة لمنع خطأ الـ Type Determination
+  const items = await sql`
+    SELECT p.*, 
+           json_build_object(
+             'id', c.id, 
+             'name', c.name, 
+             'slug', c.slug, 
+             'image', c.image
+           ) as category
+    FROM "Product" p
+    LEFT JOIN "Category" c ON p."categoryId" = c.id
+    WHERE (c.slug = ${filters.category || null} OR ${filters.category || null}::text IS NULL)
+      AND (p.brand = ${filters.brand || null} OR ${filters.brand || null}::text IS NULL)
+      AND (p."isFeatured" = ${filters.isFeatured ?? null}::boolean OR ${filters.isFeatured ?? null}::boolean IS NULL)
+      AND (p.price >= ${filters.minPrice ?? 0})
+      AND (p.price <= ${filters.maxPrice ?? 99999999})
+    ORDER BY 
+      CASE WHEN ${filters.sort || null}::text = 'price_asc' THEN p.price END ASC,
+      CASE WHEN ${filters.sort || null}::text = 'price_desc' THEN p.price END DESC,
+      CASE WHEN ${filters.sort || null}::text = 'rating' THEN p.ratings END DESC,
+      p."createdAt" DESC
+    LIMIT ${take}::int OFFSET ${skip}::int
+  `;
 
-    // Get total count
-    const countResult = await sql`
-      SELECT COUNT(*)::int as total
-      FROM "Product" p
-      LEFT JOIN "Category" c ON p."categoryId" = c.id
-      WHERE (c.slug = ${filters.category || null} OR ${filters.category || null} IS NULL)
-        AND (p.brand = ${filters.brand || null} OR ${filters.brand || null} IS NULL)
-        AND (p."isFeatured" = ${filters.isFeatured ?? null} OR ${filters.isFeatured ?? null} IS NULL)
-        AND (p.price >= ${filters.minPrice ?? 0})
-        AND (p.price <= ${filters.maxPrice ?? 99999999})
-    `;
+  // 2. جلب العدد الكلي بنفس التعديلات
+  const countResult = await sql`
+    SELECT COUNT(*)::int as total
+    FROM "Product" p
+    LEFT JOIN "Category" c ON p."categoryId" = c.id
+    WHERE (c.slug = ${filters.category || null} OR ${filters.category || null}::text IS NULL)
+      AND (p.brand = ${filters.brand || null} OR ${filters.brand || null}::text IS NULL)
+      AND (p."isFeatured" = ${filters.isFeatured ?? null}::boolean OR ${filters.isFeatured ?? null}::boolean IS NULL)
+      AND (p.price >= ${filters.minPrice ?? 0})
+      AND (p.price <= ${filters.maxPrice ?? 99999999})
+  `;
 
-    const total = countResult[0]?.total || 0;
+  const total = countResult[0]?.total || 0;
 
-    return { items, total }
-  }
+  return { items, total };
+}
 
   async findById(id: string) {
     const products = await sql`

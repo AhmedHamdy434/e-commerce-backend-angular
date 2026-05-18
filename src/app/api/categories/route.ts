@@ -9,7 +9,6 @@ import { requireAdmin } from '@/lib/auth-helpers'
 export async function GET() {
   try {
     const categories = await categoryService.getCategories()
-    console.log('🚀 ~ GET ~ categories:', categories )
     return successResponse(categories, 'Categories fetched successfully')
   } catch (error) {
     return handleError(error)
